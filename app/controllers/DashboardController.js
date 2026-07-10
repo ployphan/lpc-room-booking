@@ -22,7 +22,7 @@ class DashboardController {
 
             // Fetch recent bookings
             const recentBookings = await db.query(`
-                SELECT b.*, r.room_name, u.full_name as user_name 
+                SELECT b.*, r.room_name, (u.first_name || ' ' || u.last_name) as user_name 
                 FROM bookings b
                 JOIN rooms r ON b.room_id = r.id
                 JOIN users u ON b.user_id = u.id

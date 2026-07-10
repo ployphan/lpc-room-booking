@@ -12,7 +12,7 @@ class Booking {
 
     static async findById(id) {
         const sql = `
-            SELECT b.*, r.room_name, r.location, r.floor, u.full_name as user_name, u.email as user_email, d.department_name
+            SELECT b.*, r.room_name, r.location, r.floor, (u.first_name || ' ' || u.last_name) as user_name, u.email as user_email, d.department_name
             FROM bookings b
             JOIN rooms r ON b.room_id = r.id
             JOIN users u ON b.user_id = u.id
@@ -35,7 +35,7 @@ class Booking {
 
     static async getAll() {
         const sql = `
-            SELECT b.*, r.room_name, r.location, r.floor, u.full_name as user_name, d.department_name
+            SELECT b.*, r.room_name, r.location, r.floor, (u.first_name || ' ' || u.last_name) as user_name, d.department_name
             FROM bookings b
             JOIN rooms r ON b.room_id = r.id
             JOIN users u ON b.user_id = u.id
@@ -47,7 +47,7 @@ class Booking {
 
     static async getPending() {
         const sql = `
-            SELECT b.*, r.room_name, r.location, r.floor, u.full_name as user_name, d.department_name
+            SELECT b.*, r.room_name, r.location, r.floor, (u.first_name || ' ' || u.last_name) as user_name, d.department_name
             FROM bookings b
             JOIN rooms r ON b.room_id = r.id
             JOIN users u ON b.user_id = u.id
