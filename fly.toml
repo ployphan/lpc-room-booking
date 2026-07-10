@@ -1,6 +1,6 @@
 # fly.toml file generated for Fly.io deployment
 app = ""
-primary_region = "sin" # Singapore region (Closest to Thailand)
+primary_region = "ams"
 
 [http_service]
   internal_port = 80
