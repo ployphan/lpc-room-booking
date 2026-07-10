@@ -52,6 +52,23 @@ app.use((err, req, res, next) => {
     res.status(500).send('เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ (500 Internal Server Error)');
 });
 
+const { db } = require('./database/database');
+const { seed } = require('./database/seeders');
+
+// Auto initialize and seed empty database on startup
+db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='users'", (dbErr, row) => {
+    if (dbErr) {
+        console.error('Error checking database status:', dbErr.message);
+    } else if (!row) {
+        console.log('Database is empty or missing tables. Bootstrapping tables and seeding initial data...');
+        seed().catch(seedErr => {
+            console.error('Error auto-seeding database on start:', seedErr.message);
+        });
+    } else {
+        console.log('Database verification successful. All tables present.');
+    }
+});
+
 // Listen on configured port (Port 80)
 const PORT = config.port || 80;
 app.listen(PORT, '0.0.0.0', () => {

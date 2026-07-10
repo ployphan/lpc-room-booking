@@ -207,11 +207,20 @@ const seed = async () => {
         }
         console.log('Bookings seeded.');
         console.log('Seeding completed successfully.');
-        process.exit(0);
+        if (require.main === module) {
+            process.exit(0);
+        }
     } catch (e) {
         console.error('Seeding failed:', e);
-        process.exit(1);
+        if (require.main === module) {
+            process.exit(1);
+        }
+        throw e;
     }
 };
 
-seed();
+if (require.main === module) {
+    seed();
+}
+
+module.exports = { seed };
