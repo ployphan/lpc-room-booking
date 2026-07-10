@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="auth-page">
+    <div class="glass-panel auth-card">
+        <div class="auth-header">
+            <div class="user-avatar" style="width: 60px; height: 60px; font-size: 1.6rem; margin: 0 auto 16px auto; background: linear-gradient(135deg, var(--kpru-green) 0%, var(--kpru-gold) 100%);">
+                LPC
+            </div>
+            <h2>ลงทะเบียนผู้ใช้ใหม่</h2>
+            <p>ศูนย์การเรียนรู้ตลอดชีวิตและพัฒนามาตรฐานวิชาชีพ (LPC)</p>
+        </div>
+
+        <% if (error) { %>
+            <div class="auth-error">
+                <i class="fa-solid fa-triangle-exclamation"></i> <%= error %>
+            </div>
+        <% } %>
+
+        <% if (success) { %>
+            <div class="auth-success">
+                <i class="fa-solid fa-circle-check"></i> <%= success %>
+            </div>
+        <% } %>
+
+        <form action="/register" method="POST">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="first_name" class="form-label">ชื่อจริง</label>
+                    <div style="position: relative;">
+                        <i class="fa-solid fa-user" style="position: absolute; left: 16px; top: 16px; color: var(--text-secondary);"></i>
+                        <input type="text" id="first_name" name="first_name" class="form-control" placeholder="ชื่อจริง" style="padding-left: 44px;" required>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="last_name" class="form-label">นามสกุล</label>
+                    <div style="position: relative;">
+                        <i class="fa-solid fa-user" style="position: absolute; left: 16px; top: 16px; color: var(--text-secondary);"></i>
+                        <input type="text" id="last_name" name="last_name" class="form-control" placeholder="นามสกุล" style="padding-left: 44px;" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">อีเมล</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-envelope" style="position: absolute; left: 16px; top: 16px; color: var(--text-secondary);"></i>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="เช่น yourname@email.com" style="padding-left: 44px;" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone" class="form-label">เบอร์โทรศัพท์ติดต่อ</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-phone" style="position: absolute; left: 16px; top: 16px; color: var(--text-secondary);"></i>
+                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="เช่น 081-XXXXXXX" style="padding-left: 44px;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="department_id" class="form-label">สังกัด / แผนก</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-building" style="position: absolute; left: 16px; top: 16px; color: var(--text-secondary); z-index: 10;"></i>
+                    <select id="department_id" name="department_id" class="form-select" style="padding-left: 44px;" required>
+                        <option value="">เลือกแผนก/หน่วยงาน</option>
+                        <% departments.forEach(dept => { %>
+                            <option value="<%= dept.id %>"><%= dept.department_name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="password" class="form-label">รหัสผ่าน</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-lock" style="position: absolute; left: 16px; top: 16px; color: var(--text-secondary);"></i>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="กำหนดรหัสผ่าน (ขั้นต่ำ 6 ตัวอักษร)" style="padding-left: 44px;" minlength="6" required>
+                </div>
+            </div>
+
+            <!-- Math Captcha -->
+            <div class="form-group" style="margin-bottom: 28px;">
+                <label for="captcha_input" class="form-label">ความปลอดภัย (Captcha)</label>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border-color); font-weight: bold; color: var(--kpru-gold); user-select: none; font-size: 1.1rem; letter-spacing: 2px;">
+                        <%= captchaQuestion %>
+                    </div>
+                    <input type="number" id="captcha_input" name="captcha_input" class="form-control" placeholder="ตอบคำถามเลขเพื่อยืนยัน" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" style="padding: 14px;">
+                <i class="fa-solid fa-user-plus"></i> สมัครสมาชิก
+            </button>
+        </form>
+
+        <div class="auth-links">
+            <span style="color: var(--text-secondary);">มีบัญชีผู้ใช้อยู่แล้ว?</span> 
+            <a href="/login">เข้าสู่ระบบที่นี่</a>
+        </div>
+    </div>
+</body>
+</html>

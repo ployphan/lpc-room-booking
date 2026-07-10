@@ -1,0 +1,40 @@
+<%- include('../partials/header', { title: 'ปฏิทินการจอง - LPC Room Booking', activePage: 'calendar', pageTitle: 'ปฏิทินการจองห้องประชุม', pageSubTitle: 'แสดงตารางความว่างและการเข้าใช้งานห้องประชุมทั้งหมดของศูนย์ LPC' }) %>
+
+<% if (!user) { %>
+    <div class="glass-panel" style="padding: 24px; margin-bottom: 24px; background: linear-gradient(135deg, rgba(176, 30, 46, 0.08) 0%, rgba(245, 158, 11, 0.03) 100%); border: 1px solid rgba(176, 30, 46, 0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-radius: 14px;">
+        <div style="flex: 1; min-width: 280px;">
+            <h3 style="color: var(--kpru-red); margin-bottom: 6px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-circle-info"></i> ระบบจองห้องประชุม LPC</h3>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">ปฏิทินนี้แสดงรายการจองทั้งหมด หากต้องการทำการจองห้องประชุม โปรดลงชื่อเข้าใช้งานระบบเพื่อเข้าถึงแบบฟอร์มการจองห้องใหม่</p>
+        </div>
+        <a href="/login" class="btn btn-primary" style="padding: 12px 24px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px;">
+            <i class="fa-solid fa-right-to-bracket"></i> ลงชื่อเข้าใช้งานระบบ
+        </a>
+    </div>
+<% } %>
+
+<div class="glass-panel" style="padding: 24px;">
+    <!-- Color Legend Indicators -->
+    <div style="display: flex; gap: 20px; margin-bottom: 20px; font-size: 0.85rem; justify-content: flex-end;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 4px; background-color: #10B981;"></span>
+            <span style="color: var(--text-primary);">อนุมัติแล้ว</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 4px; background-color: #F59E0B;"></span>
+            <span style="color: var(--text-primary);">รออนุมัติ</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 4px; background-color: #EF4444;"></span>
+            <span style="color: var(--text-primary);">ปฏิเสธ</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 4px; background-color: #9CA3AF;"></span>
+            <span style="color: var(--text-primary);">ยกเลิก</span>
+        </div>
+    </div>
+
+    <!-- Calendar Container -->
+    <div id="calendar" style="min-height: 600px;"></div>
+</div>
+
+<%- include('../partials/footer') %>

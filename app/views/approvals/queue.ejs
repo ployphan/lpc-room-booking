@@ -1,0 +1,54 @@
+<%- include('../partials/header', { title: 'คิวรออนุมัติ - LPC Room Booking', activePage: 'approval_queue', pageTitle: 'คิวรออนุมัติการจองห้อง', pageSubTitle: 'พิจารณาอนุมัติหรือปฏิเสธคำขอจองห้องประชุมของพนักงาน/อาจารย์ในศูนย์ LPC' }) %>
+
+<div class="glass-panel" style="padding: 24px;">
+    <% if (bookings && bookings.length > 0) { %>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                        <th style="padding: 12px 8px;">ผู้ยื่นคำขอ</th>
+                        <th style="padding: 12px 8px;">สังกัด / แผนก</th>
+                        <th style="padding: 12px 8px;">หัวข้อการประชุม</th>
+                        <th style="padding: 12px 8px;">ห้องประชุม</th>
+                        <th style="padding: 12px 8px;">วันที่ & เวลา</th>
+                        <th style="padding: 12px 8px; text-align: right;">การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% bookings.forEach(b => { %>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px 8px;">
+                                <div style="font-weight: 600; color: #FFFFFF;"><%= b.user_name %></div>
+                            </td>
+                            <td style="padding: 16px 8px;"><%= b.department_name %></td>
+                            <td style="padding: 16px 8px; font-weight: 500; color: #FFFFFF;"><%= b.title %></td>
+                            <td style="padding: 16px 8px;"><%= b.room_name %></td>
+                            <td style="padding: 16px 8px;">
+                                <div><%= b.meeting_date %></div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);"><%= b.start_time %> - <%= b.end_time %> น.</div>
+                            </td>
+                            <td style="padding: 16px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                                <a href="/bookings/<%= b.id %>" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="fa-solid fa-eye"></i> ตรวจสอบ
+                                </a>
+                                <button onclick="processApproval(<%= b.id %>, 'reject')" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="fa-solid fa-xmark"></i> ปฏิเสธ
+                                </button>
+                                <button onclick="processApproval(<%= b.id %>, 'approve')" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="fa-solid fa-check"></i> อนุมัติ
+                                </button>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <div style="text-align: center; padding: 40px 0; color: var(--text-secondary);">
+            <i class="fa-solid fa-circle-check" style="font-size: 3rem; margin-bottom: 12px; color: var(--kpru-green); opacity: 0.8;"></i>
+            <p>ไม่มีรายการคำขอจองห้องประชุมที่รอการอนุมัติในขณะนี้</p>
+        </div>
+    <% } %>
+</div>
+
+<%- include('../partials/footer') %>

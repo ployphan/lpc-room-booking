@@ -1,0 +1,59 @@
+<%- include('../partials/header', { title: 'รายการจองของฉัน - LPC Room Booking', activePage: 'my_bookings', pageTitle: 'รายการจองของฉัน', pageSubTitle: 'ดูประวัติการจองและติดตามสถานะคำขอจองห้องประชุมของคุณ' }) %>
+
+<div class="glass-panel" style="padding: 24px;">
+    <% if (bookings && bookings.length > 0) { %>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                        <th style="padding: 12px 8px;">หัวข้อการประชุม</th>
+                        <th style="padding: 12px 8px;">ห้องประชุม</th>
+                        <th style="padding: 12px 8px;">วันที่ประชุม</th>
+                        <th style="padding: 12px 8px;">ช่วงเวลา</th>
+                        <th style="padding: 12px 8px;">สถานะการอนุมัติ</th>
+                        <th style="padding: 12px 8px;">สถานะการจอง</th>
+                        <th style="padding: 12px 8px; text-align: right;">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% bookings.forEach(b => { %>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px 8px; font-weight: 500; color: #FFFFFF;"><%= b.title %></td>
+                            <td style="padding: 16px 8px;"><%= b.room_name %></td>
+                            <td style="padding: 16px 8px;"><%= b.meeting_date %></td>
+                            <td style="padding: 16px 8px;"><%= b.start_time %> - <%= b.end_time %> น.</td>
+                            <td style="padding: 16px 8px;">
+                                <span class="status-badge status-<%= b.approval_status %>">
+                                    <%= b.approval_status === 'approved' ? 'อนุมัติแล้ว' : (b.approval_status === 'pending' ? 'รออนุมัติ' : 'ปฏิเสธ') %>
+                                </span>
+                            </td>
+                            <td style="padding: 16px 8px;">
+                                <span class="status-badge <%= b.booking_status === 'cancelled' ? 'status-cancelled' : 'status-approved' %>">
+                                    <%= b.booking_status === 'cancelled' ? 'ยกเลิกแล้ว' : 'ปกติ' %>
+                                </span>
+                            </td>
+                            <td style="padding: 16px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                                <a href="/bookings/<%= b.id %>" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="fa-solid fa-eye"></i> ดูรายละเอียด
+                                </a>
+                                <% if (b.booking_status !== 'cancelled' && b.approval_status !== 'rejected') { %>
+                                    <button onclick="cancelBooking(<%= b.id %>)" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                        <i class="fa-solid fa-ban"></i> ยกเลิกการจอง
+                                    </button>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <div style="text-align: center; padding: 40px 0; color: var(--text-secondary);">
+            <i class="fa-solid fa-calendar-xmark" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.4;"></i>
+            <p>คุณยังไม่มีประวัติการจองห้องประชุม</p>
+            <a href="/bookings/new" class="btn btn-primary" style="margin-top: 16px;">จองห้องประชุมใหม่ตอนนี้</a>
+        </div>
+    <% } %>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,226 @@
+<%- include('../partials/header', { title: 'จองห้องประชุมใหม่ - LPC Room Booking', activePage: 'new_booking', pageTitle: 'จองห้องประชุมใหม่', pageSubTitle: 'กรอกรายละเอียดการจองห้องของศูนย์ LPC ด้านล่าง' }) %>
+
+<% 
+   const advanceDate = new Date();
+   advanceDate.setDate(advanceDate.getDate() + 3);
+   const minDateString = advanceDate.toISOString().split('T')[0];
+%>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Booking Form Card -->
+    <div class="glass-panel" style="padding: 32px;">
+        <div id="formError" class="auth-error" style="display: none;"></div>
+
+        <form id="bookingForm">
+            <!-- Room Selection & Live Check -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="room_id" class="form-label">ห้องประชุม</label>
+                    <select id="room_id" name="room_id" class="form-select" required>
+                        <option value="">เลือกห้องประชุมที่ต้องการ</option>
+                        <% rooms.forEach(room => { %>
+                            <option value="<%= room.id %>"><%= room.room_name %> (จุได้ <%= room.capacity %> คน)</option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="date" class="form-label">วันที่ใช้งาน</label>
+                    <input type="date" id="date" name="date" class="form-control" min="<%= minDateString %>" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="start_time" class="form-label">เวลาเริ่มต้น (24 ชม.)</label>
+                    <select id="start_time" name="start_time" class="form-select" required>
+                        <option value="">เลือกเวลาเริ่ม</option>
+                        <option value="08:00">08:00</option>
+                        <option value="08:30">08:30</option>
+                        <option value="09:00">09:00</option>
+                        <option value="09:30">09:30</option>
+                        <option value="10:00">10:00</option>
+                        <option value="10:30">10:30</option>
+                        <option value="11:00">11:00</option>
+                        <option value="11:30">11:30</option>
+                        <option value="12:00">12:00</option>
+                        <option value="12:30">12:30</option>
+                        <option value="13:00">13:00</option>
+                        <option value="13:30">13:30</option>
+                        <option value="14:00">14:00</option>
+                        <option value="14:30">14:30</option>
+                        <option value="15:00">15:00</option>
+                        <option value="15:30">15:30</option>
+                        <option value="16:00">16:00</option>
+                        <option value="16:30">16:30</option>
+                        <option value="17:00">17:00</option>
+                        <option value="17:30">17:30</option>
+                        <option value="18:00">18:00</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="end_time" class="form-label">เวลาสิ้นสุด (24 ชม.)</label>
+                    <select id="end_time" name="end_time" class="form-select" required>
+                        <option value="">เลือกเวลาสิ้นสุด</option>
+                        <option value="08:30">08:30</option>
+                        <option value="09:00">09:00</option>
+                        <option value="09:30">09:30</option>
+                        <option value="10:00">10:00</option>
+                        <option value="10:30">10:30</option>
+                        <option value="11:00">11:00</option>
+                        <option value="11:30">11:30</option>
+                        <option value="12:00">12:00</option>
+                        <option value="12:30">12:30</option>
+                        <option value="13:00">13:00</option>
+                        <option value="13:30">13:30</option>
+                        <option value="14:00">14:00</option>
+                        <option value="14:30">14:30</option>
+                        <option value="15:00">15:00</option>
+                        <option value="15:30">15:30</option>
+                        <option value="16:00">16:00</option>
+                        <option value="16:30">16:30</option>
+                        <option value="17:00">17:00</option>
+                        <option value="17:30">17:30</option>
+                        <option value="18:00">18:00</option>
+                        <option value="18:30">18:30</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Live Status Alert Badge -->
+            <div id="availabilityBadge" class="glass-panel" style="display: none; padding: 12px 16px; margin-bottom: 24px; font-size: 0.9rem; font-weight: 500;">
+                <!-- Updated dynamically via JS -->
+            </div>
+
+            <!-- ข้อมูลผู้จองเพิ่มเติม -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 20px;">
+                <div class="form-group">
+                    <label for="booker_name" class="form-label">ชื่อ-สกุล ผู้จอง</label>
+                    <input type="text" id="booker_name" name="booker_name" class="form-control" value="<%= user ? user.full_name : '' %>" required <%= user ? 'readonly style="background-color: #F3F4F6; color: #4B5563; cursor: not-allowed;"' : '' %>>
+                </div>
+                <div class="form-group">
+                    <label for="booker_department" class="form-label">หน่วยงานผู้จอง</label>
+                    <input type="text" id="booker_department" name="booker_department" class="form-control" value="<%= user ? user.department_name : '' %>" required <%= user ? 'readonly style="background-color: #F3F4F6; color: #4B5563; cursor: not-allowed;"' : '' %>>
+                </div>
+                <div class="form-group">
+                    <label for="booker_phone" class="form-label">เบอร์โทรผู้จอง</label>
+                    <input type="text" id="booker_phone" name="booker_phone" class="form-control" value="<%= user ? user.phone : '' %>" required <%= user ? 'readonly style="background-color: #F3F4F6; color: #4B5563; cursor: not-allowed;"' : '' %>>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="title" class="form-label">หัวข้อการประชุม</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="ระบุหัวข้อหรือจุดประสงค์ในการประชุม" required>
+            </div>
+
+            <div class="form-group">
+                <label for="attendees" class="form-label">จำนวนผู้เข้าประชุม (คน)</label>
+                <input type="number" id="attendees" name="attendees" class="form-control" placeholder="ระบุจำนวนคน" min="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="details" class="form-label">รายละเอียด / วาระการประชุม</label>
+                <textarea id="details" name="details" class="form-control" rows="4" placeholder="ระบุวาระการประชุม หรือรายละเอียดอุปกรณ์เสริมเพิ่มเติมที่ต้องการ"></textarea>
+            </div>
+
+            <!-- Dynamic Attendees Section -->
+            <div class="form-group" style="margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <label class="form-label" style="margin-bottom: 0;">รายชื่อผู้เข้าร่วมประชุมเพิ่มเติม (เพื่อส่งเมลนัดหมาย)</label>
+                    <button type="button" id="btnAddAttendee" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                        <i class="fa-solid fa-plus"></i> เพิ่มผู้เข้าร่วม
+                    </button>
+                </div>
+                <div id="attendeesListContainer" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Added rows go here -->
+                </div>
+            </div>
+
+            <div style="margin-top: 32px;">
+                <button type="submit" class="btn btn-primary w-100" style="padding: 14px;">
+                    <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลและส่งคำขอจอง
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Right Side Information Card -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Checklist Guidelines -->
+        <div class="glass-panel" style="padding: 24px;">
+            <h3 style="margin-bottom: 16px; font-size: 1.1rem; color: var(--kpru-gold);">
+                <i class="fa-solid fa-circle-check"></i> ข้อกำหนดการจองห้อง
+            </h3>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem; color: var(--text-secondary);">
+                <li>
+                    <i class="fa-solid fa-caret-right" style="color: var(--kpru-green); margin-right: 6px;"></i> 
+                    จองล่วงหน้าอย่างน้อย 3 วัน และ ยกเลิกจองล่วงหน้าอย่างน้อย 2 วัน
+                </li>
+                <li>
+                    <i class="fa-solid fa-caret-right" style="color: var(--kpru-green); margin-right: 6px;"></i> 
+                    เวลาเริ่มต้นต้องอยู่ในช่วงเวลาทำการ (08:30 น. - 16:30 น.)
+                </li>
+                <li>
+                    <i class="fa-solid fa-caret-right" style="color: var(--kpru-green); margin-right: 6px;"></i> 
+                    หากมีจำนวนผู้เข้าร่วมเกินความจุของห้องที่เลือก ระบบจะแจ้งเตือน
+                </li>
+                <li>
+                    <i class="fa-solid fa-caret-right" style="color: var(--kpru-green); margin-right: 6px;"></i> 
+                    กรุณาตรวจสอบเวลาว่างของห้องประชุมก่อนส่งข้อมูลเพื่อความสะดวกรวดเร็ว
+                </li>
+            </ul>
+        </div>
+
+        <!-- Room Capacities Info -->
+        <div class="glass-panel" style="padding: 24px;">
+            <h3 style="margin-bottom: 16px; font-size: 1.1rem; color: var(--kpru-gold);">
+                <i class="fa-solid fa-door-open"></i> รายละเอียดความจุของห้อง
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem; color: var(--text-secondary);">
+                <% rooms.forEach(room => { %>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                        <span><%= room.room_name %></span>
+                        <strong style="color: #FFFFFF;"><%= room.capacity %> ที่นั่ง</strong>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setupBookingForm();
+
+        // Add dynamic attendee row logic
+        const btnAdd = document.getElementById('btnAddAttendee');
+        const container = document.getElementById('attendeesListContainer');
+
+        btnAdd.addEventListener('click', function() {
+            const row = document.createElement('div');
+            row.className = 'attendee-row';
+            row.style.display = 'grid';
+            row.style.gridTemplateColumns = '1.5fr 1.5fr auto';
+            row.style.gap = '10px';
+            row.style.alignItems = 'center';
+
+            row.innerHTML = `
+                <input type="text" class="form-control att-name" placeholder="ชื่อ-นามสกุล" required>
+                <input type="email" class="form-control att-email" placeholder="อีเมล" required>
+                <button type="button" class="btn btn-danger btn-remove" style="padding: 10px; border-radius: 8px;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+
+            container.appendChild(row);
+
+            // Bind remove action
+            row.querySelector('.btn-remove').addEventListener('click', function() {
+                row.remove();
+            });
+        });
+    });
+</script>
+
+<%- include('../partials/footer') %>

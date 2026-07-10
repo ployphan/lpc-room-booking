@@ -1,0 +1,56 @@
+<%- include('../partials/header', { title: 'รายงานการใช้งาน - LPC Room Booking', activePage: 'reports', pageTitle: 'รายงานและสรุปสถิติ', pageSubTitle: 'ดูรายงานสรุปความหนาแน่นและการเข้าใช้งานห้องประชุมของศูนย์ LPC' }) %>
+
+<div class="glass-panel" style="padding: 24px;">
+    <h3 style="margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-file-invoice" style="color: var(--kpru-gold);"></i> รายงานสรุปตามห้องประชุม
+    </h3>
+
+    <div style="overflow-x: auto;">
+        <table id="reportsTable" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                    <th style="padding: 12px 8px;">ห้องประชุม</th>
+                    <th style="padding: 12px 8px; text-align: center;">จำนวนการจองรวม (ครั้ง)</th>
+                    <th style="padding: 12px 8px; text-align: center;">จองที่อนุมัติแล้ว (ครั้ง)</th>
+                    <th style="padding: 12px 8px; text-align: center;">จำนวนผู้เข้าประชุมสะสม (คน)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Populated via AJAX -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/reports/usage')
+            .then(res => res.json())
+            .then(resData => {
+                if (resData.status === 200) {
+                    const data = resData.data;
+                    const tbody = document.querySelector('#reportsTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px 0;">ไม่มีข้อมูลรายงานการจองห้องประชุม</td></tr>`;
+                        return;
+                    }
+
+                    data.forEach(r => {
+                        tbody.innerHTML += `
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 16px 8px; font-weight: 600; color: #FFFFFF;">${r.room_name}</td>
+                                <td style="padding: 16px 8px; text-align: center; font-weight: 500; color: #FFFFFF;">${r.total_bookings} ครั้ง</td>
+                                <td style="padding: 16px 8px; text-align: center; color: var(--success); font-weight: 500;">${r.approved_bookings} ครั้ง</td>
+                                <td style="padding: 16px 8px; text-align: center; color: var(--kpru-gold); font-weight: 500;">${r.total_attendees || 0} คน</td>
+                            </tr>
+                        `;
+                    });
+                }
+            })
+            .catch(err => console.error('Error fetching report:', err));
+    });
+</script>
+
+<%- include('../partials/footer') %>

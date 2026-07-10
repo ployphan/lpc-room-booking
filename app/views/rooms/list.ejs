@@ -1,0 +1,297 @@
+<%- include('../partials/header', { title: 'จัดการห้องประชุม - LPC Room Booking', activePage: 'rooms', pageTitle: 'จัดการห้องประชุม', pageSubTitle: 'เพิ่ม แก้ไข ปรับปรุงข้อมูลห้องประชุมและอุปกรณ์เสริมของศูนย์ LPC' }) %>
+
+<div style="margin-bottom: 24px; display: flex; justify-content: flex-end;">
+    <button onclick="showAddRoomModal()" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> เพิ่มห้องประชุมใหม่
+    </button>
+</div>
+
+<div class="glass-panel" style="padding: 24px;">
+    <% if (rooms && rooms.length > 0) { %>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                        <th style="padding: 12px 8px;">ชื่อห้องประชุม</th>
+                        <th style="padding: 12px 8px;">สถานที่ตั้ง</th>
+                        <th style="padding: 12px 8px;">ชั้น</th>
+                        <th style="padding: 12px 8px;">ความจุ (คน)</th>
+                        <th style="padding: 12px 8px;">อุปกรณ์อำนวยความสะดวก</th>
+                        <th style="padding: 12px 8px;">สถานะ</th>
+                        <th style="padding: 12px 8px; text-align: right;">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% rooms.forEach(room => { %>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px 8px;">
+                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;"><%= room.room_name %></div>
+                                <% if (room.images) { %>
+                                    <% try { %>
+                                        <% const imgs = JSON.parse(room.images); %>
+                                        <% if (imgs && imgs.length > 0) { %>
+                                            <div style="display: flex; gap: 4px; margin-top: 6px;">
+                                                <% imgs.forEach(img => { %>
+                                                    <img src="<%= img %>" style="width: 32px; height: 32px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border-color); cursor: pointer;" onclick="viewFullImage('<%= img %>')" title="คลิกเพื่อดูรูปขนาดเต็ม">
+                                                <% }) %>
+                                            </div>
+                                        <% } %>
+                                    <% } catch(e) { } %>
+                                <% } %>
+                            </td>
+                            <td style="padding: 16px 8px; color: var(--text-primary);"><%= room.location %></td>
+                            <td style="padding: 16px 8px; color: var(--text-primary);"><%= room.floor %></td>
+                            <td style="padding: 16px 8px; font-weight: 500; color: var(--text-primary);"><%= room.capacity %> ที่นั่ง</td>
+                            <td style="padding: 16px 8px;">
+                                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                    <% if (room.equipment_summary) { %>
+                                        <% room.equipment_summary.split(',').forEach(eq => { %>
+                                            <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-secondary);"><%= eq.trim() %></span>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <span style="color: var(--text-secondary); font-size: 0.75rem;">-</span>
+                                    <% } %>
+                                </div>
+                            </td>
+                            <td style="padding: 16px 8px;">
+                                <span class="status-badge <%= room.status === 'active' ? 'status-approved' : (room.status === 'maintenance' ? 'status-pending' : 'status-cancelled') %>">
+                                    <%= room.status === 'active' ? 'เปิดใช้งาน' : (room.status === 'maintenance' ? 'ปิดปรับปรุง' : 'ปิดใช้งาน') %>
+                                </span>
+                            </td>
+                            <td style="padding: 16px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                                <button onclick="showEditRoomModal(<%= JSON.stringify(room) %>)" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="fa-solid fa-pen-to-square"></i> แก้ไข
+                                </button>
+                                <button onclick="deleteRoom(<%= room.id %>)" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="fa-solid fa-trash"></i> ลบ
+                                </button>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <p style="color: var(--text-secondary); text-align: center; padding: 20px 0;">ยังไม่มีข้อมูลห้องประชุมในระบบ</p>
+    <% } %>
+</div>
+
+<!-- Add/Edit Room Modal (Glassmorphic Styled Modal) -->
+<div id="roomModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div class="glass-panel" style="width: 100%; max-width: 500px; padding: 32px; position: relative;">
+        <h3 id="modalTitle" style="margin-bottom: 24px; font-size: 1.2rem;">เพิ่มห้องประชุมใหม่</h3>
+        <button onclick="closeRoomModal()" style="position: absolute; right: 24px; top: 24px; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <form id="roomForm">
+            <input type="hidden" id="edit_room_id">
+            
+            <div class="form-group">
+                <label for="modal_room_name" class="form-label">ชื่อห้องประชุม</label>
+                <input type="text" id="modal_room_name" class="form-control" placeholder="เช่น Room A (LPC-101)" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label for="modal_location" class="form-label">สถานที่ตั้ง</label>
+                    <input type="text" id="modal_location" class="form-control" placeholder="เช่น อาคารเรียนรู้ LPC" required>
+                </div>
+                <div class="form-group">
+                    <label for="modal_floor" class="form-label">ชั้น</label>
+                    <input type="text" id="modal_floor" class="form-control" placeholder="เช่น ชั้น 1" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px;">
+                <div class="form-group">
+                    <label for="modal_capacity" class="form-label">ความจุผู้เข้าประชุม (คน)</label>
+                    <input type="number" id="modal_capacity" class="form-control" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="modal_status" class="form-label">สถานะการใช้งาน</label>
+                    <select id="modal_status" class="form-select">
+                        <option value="active">เปิดใช้งาน (Active)</option>
+                        <option value="maintenance">ปิดปรับปรุง (Maintenance)</option>
+                        <option value="inactive">ปิดใช้งาน (Inactive)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="modal_equipment" class="form-label">รายการอุปกรณ์ (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
+                <input type="text" id="modal_equipment" class="form-control" placeholder="เช่น Projector, Whiteboard, Air Conditioner">
+            </div>
+
+            <!-- Room Image Upload (Max 5) -->
+            <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">รูปภาพห้องประชุม (อัปโหลดสูงสุด 5 รูป)</label>
+                <input type="file" id="modal_images_input" class="form-control" multiple accept="image/*">
+                <div id="imagePreviews" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;"></div>
+            </div>
+
+            <div style="margin-top: 28px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="closeRoomModal()" class="btn btn-secondary">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('roomModal');
+    const form = document.getElementById('roomForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const editIdInput = document.getElementById('edit_room_id');
+    let roomImages = [];
+    
+    function showAddRoomModal() {
+        modalTitle.textContent = 'เพิ่มห้องประชุมใหม่';
+        editIdInput.value = '';
+        roomImages = [];
+        document.getElementById('imagePreviews').innerHTML = '';
+        document.getElementById('modal_images_input').value = '';
+        form.reset();
+        modal.style.display = 'flex';
+    }
+
+    function showEditRoomModal(room) {
+        modalTitle.textContent = 'แก้ไขห้องประชุม';
+        editIdInput.value = room.id;
+        document.getElementById('modal_room_name').value = room.room_name;
+        document.getElementById('modal_location').value = room.location;
+        document.getElementById('modal_floor').value = room.floor;
+        document.getElementById('modal_capacity').value = room.capacity;
+        document.getElementById('modal_status').value = room.status;
+        document.getElementById('modal_equipment').value = room.equipment_summary || '';
+        document.getElementById('modal_images_input').value = '';
+        
+        // Load existing images
+        roomImages = room.images ? JSON.parse(room.images) : [];
+        renderImagePreviews();
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeRoomModal() {
+        modal.style.display = 'none';
+    }
+
+    // Image upload handler
+    document.getElementById('modal_images_input').addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (roomImages.length + files.length > 5) {
+            alert('คุณสามารถอัปโหลดรูปภาพได้ไม่เกิน 5 รูปต่อห้องประชุม');
+            e.target.value = '';
+            return;
+        }
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                roomImages.push(evt.target.result);
+                renderImagePreviews();
+            };
+            reader.readAsDataURL(file);
+        }
+        e.target.value = ''; // Clear input for next choose
+    });
+
+    function renderImagePreviews() {
+        const previewContainer = document.getElementById('imagePreviews');
+        previewContainer.innerHTML = '';
+        roomImages.forEach((img, index) => {
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+            wrapper.style.width = '70px';
+            wrapper.style.height = '70px';
+            wrapper.style.borderRadius = '6px';
+            wrapper.style.overflow = 'hidden';
+            wrapper.style.border = '1px solid var(--border-color)';
+            wrapper.innerHTML = `
+                <img src="${img}" style="width: 100%; height: 100%; object-fit: cover;">
+                <button type="button" onclick="removeImage(${index})" style="position: absolute; right: 2px; top: 2px; background: rgba(220, 38, 38, 0.85); border: none; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+            previewContainer.appendChild(wrapper);
+        });
+    }
+
+    function removeImage(index) {
+        roomImages.splice(index, 1);
+        renderImagePreviews();
+    }
+
+    function viewFullImage(src) {
+        const viewer = document.createElement('div');
+        viewer.style.position = 'fixed';
+        viewer.style.inset = '0';
+        viewer.style.background = 'rgba(0, 0, 0, 0.85)';
+        viewer.style.zIndex = '9999';
+        viewer.style.display = 'flex';
+        viewer.style.alignItems = 'center';
+        viewer.style.justifyContent = 'center';
+        viewer.onclick = function() { viewer.remove(); };
+        
+        viewer.innerHTML = `
+            <div style="position: relative; max-width: 90%; max-height: 90%;">
+                <img src="${src}" style="max-width: 100%; max-height: 90vh; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);">
+                <div style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); color: #FFFFFF; font-size: 0.85rem; font-weight: 400; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">คลิกพื้นที่ใดก็ได้เพื่อปิด</div>
+            </div>
+        `;
+        document.body.appendChild(viewer);
+    }
+
+    async function deleteRoom(id) {
+        if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบห้องประชุมนี้? ข้อมูลการจองที่เกี่ยวข้องจะถูกยกเลิกด้วย')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/rooms/${id}`, { method: 'DELETE' });
+            const result = await res.json();
+            alert(result.message);
+            window.location.reload();
+        } catch (e) {
+            console.error(e);
+            alert('เกิดข้อผิดพลาดในการลบห้องประชุม');
+        }
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const id = editIdInput.value;
+        const url = id ? `/api/rooms/${id}` : '/api/rooms';
+        const method = id ? 'PUT' : 'POST';
+
+        const data = {
+            room_name: document.getElementById('modal_room_name').value,
+            location: document.getElementById('modal_location').value,
+            floor: document.getElementById('modal_floor').value,
+            capacity: parseInt(document.getElementById('modal_capacity').value),
+            status: document.getElementById('modal_status').value,
+            equipment_summary: document.getElementById('modal_equipment').value,
+            images: JSON.stringify(roomImages)
+        };
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            alert(result.message);
+            closeRoomModal();
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        }
+    });
+</script>
+
+<%- include('../partials/footer') %>

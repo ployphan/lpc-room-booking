@@ -1,0 +1,125 @@
+<%- include('../partials/header', { title: 'จัดการคำขอจองทั้งหมด - LPC Room Booking', activePage: 'all_bookings', pageTitle: 'จัดการคำขอจองทั้งหมด', pageSubTitle: 'ดูและจัดการรายการคำขอจองทั้งหมดในระบบศูนย์ LPC' }) %>
+
+<!-- Status Filter Tabs -->
+<div class="glass-panel" style="padding: 16px; margin-bottom: 24px; display: flex; gap: 12px; align-items: center; justify-content: space-between;">
+    <div style="display: flex; gap: 8px;">
+        <button onclick="filterTable('all')" class="btn btn-secondary filter-btn active" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 8px;">ทั้งหมด</button>
+        <button onclick="filterTable('pending')" class="btn btn-secondary filter-btn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 8px;">รออนุมัติ</button>
+        <button onclick="filterTable('approved')" class="btn btn-secondary filter-btn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 8px;">อนุมัติแล้ว</button>
+        <button onclick="filterTable('rejected')" class="btn btn-secondary filter-btn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 8px;">ปฏิเสธ</button>
+        <button onclick="filterTable('cancelled')" class="btn btn-secondary filter-btn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 8px;">ยกเลิก</button>
+    </div>
+    
+    <span style="font-size: 0.85rem; color: var(--text-secondary);" id="recordCount">
+        พบรายการทั้งหมด: <%= bookings.length %> รายการ
+    </span>
+</div>
+
+<div class="glass-panel" style="padding: 24px;">
+    <% if (bookings && bookings.length > 0) { %>
+        <div style="overflow-x: auto;">
+            <table id="allBookingsTable" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                        <th style="padding: 12px 8px;">หัวข้อการประชุม</th>
+                        <th style="padding: 12px 8px;">ห้องประชุม</th>
+                        <th style="padding: 12px 8px;">ผู้ขอจอง / ผู้ประสานงาน</th>
+                        <th style="padding: 12px 8px;">หน่วยงาน</th>
+                        <th style="padding: 12px 8px;">วันที่ & เวลา</th>
+                        <th style="padding: 12px 8px;">สถานะการอนุมัติ</th>
+                        <th style="padding: 12px 8px;">สถานะการจอง</th>
+                        <th style="padding: 12px 8px; text-align: right;">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% bookings.forEach(b => { %>
+                        <tr class="booking-row" data-approval="<%= b.approval_status %>" data-booking="<%= b.booking_status %>" style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px 8px; font-weight: 500; color: #111827;"><%= b.title %></td>
+                            <td style="padding: 16px 8px;"><%= b.room_name %></td>
+                            <td style="padding: 16px 8px;">
+                                <div><%= b.booker_name || b.user_name %></div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);"><%= b.booker_phone || '-' %></div>
+                            </td>
+                            <td style="padding: 16px 8px;"><%= b.booker_department || b.department_name %></td>
+                            <td style="padding: 16px 8px;">
+                                <div><%= b.meeting_date %></div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);"><%= b.start_time %> - <%= b.end_time %> น.</div>
+                            </td>
+                            <td style="padding: 16px 8px;">
+                                <span class="status-badge status-<%= b.approval_status %>">
+                                    <%= b.approval_status === 'approved' ? 'อนุมัติแล้ว' : (b.approval_status === 'pending' ? 'รออนุมัติ' : 'ปฏิเสธ') %>
+                                </span>
+                            </td>
+                            <td style="padding: 16px 8px;">
+                                <span class="status-badge <%= b.booking_status === 'cancelled' ? 'status-cancelled' : 'status-approved' %>">
+                                    <%= b.booking_status === 'cancelled' ? 'ยกเลิกแล้ว' : 'ปกติ' %>
+                                </span>
+                            </td>
+                            <td style="padding: 16px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end; align-items: center; min-height: 70px;">
+                                <a href="/bookings/<%= b.id %>" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="fa-solid fa-eye"></i> ดูรายละเอียด
+                                </a>
+                                <a href="/bookings/<%= b.id %>/edit" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="fa-solid fa-pen-to-square"></i> แก้ไข
+                                </a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <p style="color: var(--text-secondary); text-align: center; padding: 20px 0;">ยังไม่มีรายการจองห้องประชุมใดๆ ในขณะนี้</p>
+    <% } %>
+</div>
+
+<script>
+    function filterTable(status) {
+        // Toggle active button class
+        const buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Filter rows
+        const rows = document.querySelectorAll('.booking-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const approval = row.getAttribute('data-approval');
+            const booking = row.getAttribute('data-booking');
+
+            if (status === 'all') {
+                row.style.display = '';
+                visibleCount++;
+            } else if (status === 'cancelled') {
+                if (booking === 'cancelled') {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            } else {
+                // pending, approved, rejected (based on approval_status, but not cancelled)
+                if (approval === status && booking !== 'cancelled') {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+
+        // Update record count text
+        document.getElementById('recordCount').textContent = `พบรายการตรงตามกรอง: ${visibleCount} รายการ`;
+    }
+</script>
+
+<style>
+    .filter-btn.active {
+        background: linear-gradient(135deg, var(--kpru-green) 0%, #8E1522 100%) !important;
+        color: #FFFFFF !important;
+        border-color: var(--kpru-green) !important;
+    }
+</style>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="auth-page">
+    <div class="glass-panel auth-card">
+        <div class="auth-header">
+            <!-- Simulated logo icon -->
+            <div class="user-avatar" style="width: 60px; height: 60px; font-size: 1.6rem; margin: 0 auto 16px auto; background: linear-gradient(135deg, var(--kpru-green) 0%, var(--kpru-gold) 100%);">
+                LPC
+            </div>
+            <h2>ระบบจองห้องประชุม</h2>
+            <p>ศูนย์การเรียนรู้ตลอดชีวิตและพัฒนามาตรฐานวิชาชีพ (LPC)</p>
+            <p style="font-size: 0.75rem; color: var(--kpru-green); margin-top: 4px;">https://asl.kpru.ac.th/lpc/</p>
+        </div>
+
+        <% if (error) { %>
+            <div class="auth-error">
+                <i class="fa-solid fa-triangle-exclamation"></i> <%= error %>
+            </div>
+        <% } %>
+
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label for="email" class="form-label">อีเมลผู้ใช้งาน (KPRU Email)</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-envelope" style="position: absolute; left: 16px; top: 16px; color: var(--text-secondary);"></i>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="เช่น user@kpru.ac.th" style="padding-left: 44px;" required>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="password" class="form-label">รหัสผ่าน</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-lock" style="position: absolute; left: 16px; top: 16px; color: var(--text-secondary);"></i>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="ระบุรหัสผ่านของคุณ" style="padding-left: 44px;" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" style="padding: 14px;">
+                <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ
+            </button>
+        </form>
+
+        <div class="auth-links">
+            <span style="color: var(--text-secondary);">ยังไม่มีบัญชีผู้ใช้?</span> 
+            <a href="/register">ลงทะเบียนผู้ใช้ใหม่</a>
+        </div>
+
+        <!-- Testing accounts info box -->
+        <div class="glass-panel" style="margin-top: 24px; padding: 16px; border-radius: 12px; font-size: 0.8rem; background: rgba(255, 255, 255, 0.02);">
+            <h4 style="margin-bottom: 8px; color: var(--kpru-gold); font-size: 0.85rem;"><i class="fa-solid fa-circle-info"></i> ข้อมูลบัญชีสำหรับทดสอบระบบ</h4>
+            <ul style="list-style: none; padding-left: 0; color: var(--text-secondary); display: flex; flex-direction: column; gap: 4px;">
+                <li><strong>Admin:</strong> admin@kpru.ac.th (pw: admin1234)</li>
+                <li><strong>Approver:</strong> approver@kpru.ac.th (pw: approver1234)</li>
+                <li><strong>User:</strong> user@kpru.ac.th (pw: user1234)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

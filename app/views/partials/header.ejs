@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'ระบบจองห้องประชุม - LPC' %></title>
+    <!-- Tailwind or other frameworks are not used, only custom premium CSS -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/th.global.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <!-- LPC / KPRU logo placeholder icon -->
+                <div class="user-avatar" style="width: 44px; height: 44px; font-size: 1.2rem; background: linear-gradient(135deg, var(--kpru-green) 0%, var(--kpru-gold) 100%);">
+                    LPC
+                </div>
+                <div class="logo-text">
+                    <h2>ศูนย์ LPC</h2>
+                    <span>จองห้องประชุม</span>
+                </div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-item <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">
+                    <a href="/dashboard">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>ระบบจองห้อง ศูนย์ LPC</span>
+                    </a>
+                </li>
+                <% if (user) { %>
+                    <li class="menu-item <%= typeof activePage !== 'undefined' && activePage === 'new_booking' ? 'active' : '' %>">
+                        <a href="/bookings/new">
+                            <i class="fa-solid fa-circle-plus"></i>
+                            <span>จองห้องประชุมใหม่</span>
+                        </a>
+                    </li>
+                    <li class="menu-item <%= typeof activePage !== 'undefined' && activePage === 'my_bookings' ? 'active' : '' %>">
+                        <a href="/bookings/my">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span>รายการจองของฉัน</span>
+                        </a>
+                    </li>
+                <% } %>
+
+                <!-- Admin & Approver Shared Menu -->
+                <% if (user && (user.role_name === 'admin' || user.role_name === 'approver')) { %>
+                    <li class="menu-title" style="color: var(--text-secondary); font-size: 0.75rem; margin: 16px 0 8px 16px; text-transform: uppercase; letter-spacing: 0.5px;">จัดการการจอง (Management)</li>
+                    <li class="menu-item <%= typeof activePage !== 'undefined' && activePage === 'all_bookings' ? 'active' : '' %>">
+                        <a href="/bookings/all">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span>คำขอจองทั้งหมด</span>
+                        </a>
+                    </li>
+                <% } %>
+
+                <!-- Approver Only Section -->
+                <% if (user && user.role_name === 'approver') { %>
+                    <li class="menu-title" style="color: var(--text-secondary); font-size: 0.75rem; margin: 16px 0 8px 16px; text-transform: uppercase; letter-spacing: 0.5px;">ผู้อนุมัติ (Approver)</li>
+                    <li class="menu-item <%= typeof activePage !== 'undefined' && activePage === 'approval_queue' ? 'active' : '' %>">
+                        <a href="/approvals/queue">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                            <span>คิวรออนุมัติ</span>
+                        </a>
+                    </li>
+                <% } %>
+
+                <!-- Admin Only Section -->
+                <% if (user && user.role_name === 'admin') { %>
+                    <li class="menu-title" style="color: var(--text-secondary); font-size: 0.75rem; margin: 16px 0 8px 16px; text-transform: uppercase; letter-spacing: 0.5px;">ผู้ดูแลระบบ (Admin)</li>
+                    <li class="menu-item <%= typeof activePage !== 'undefined' && activePage === 'rooms' ? 'active' : '' %>">
+                        <a href="/rooms">
+                            <i class="fa-solid fa-door-open"></i>
+                            <span>จัดการห้องประชุม</span>
+                        </a>
+                    </li>
+                    <li class="menu-item <%= typeof activePage !== 'undefined' && activePage === 'users' ? 'active' : '' %>">
+                        <a href="/users">
+                            <i class="fa-solid fa-users"></i>
+                            <span>จัดการสมาชิก</span>
+                        </a>
+                    </li>
+                <% } %>
+
+                <!-- Reports & Settings (For all but styled beautifully) -->
+                <% if (user) { %>
+                    <li class="menu-title" style="color: var(--text-secondary); font-size: 0.75rem; margin: 16px 0 8px 16px; text-transform: uppercase; letter-spacing: 0.5px;">อื่นๆ</li>
+                    <li class="menu-item <%= typeof activePage !== 'undefined' && activePage === 'reports' ? 'active' : '' %>">
+                        <a href="/reports">
+                            <i class="fa-solid fa-file-invoice-with-usd"></i>
+                            <span>รายงานการใช้งาน</span>
+                        </a>
+                    </li>
+                    <li class="menu-item <%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">
+                        <a href="/settings">
+                            <i class="fa-solid fa-sliders"></i>
+                            <span>ตั้งค่าระบบ</span>
+                        </a>
+                    </li>
+                <% } %>
+            </ul>
+
+            <!-- Sidebar User Profile Footer -->
+            <div class="sidebar-user">
+                <% if (user) { %>
+                    <div class="user-avatar">
+                        <%= user.full_name.charAt(0) %>
+                    </div>
+                    <div class="user-info">
+                        <h4><%= user.full_name %></h4>
+                        <span><%= user.role_name.toUpperCase() %></span>
+                    </div>
+                    <a href="/logout" style="color: var(--text-secondary); margin-left: auto; transition: color 0.2s;" title="ออกจากระบบ">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </a>
+                <% } else { %>
+                    <div class="user-avatar" style="background: rgba(255,255,255,0.05); border: 1px dashed var(--border-color); color: var(--text-secondary);">
+                        <i class="fa-solid fa-user-secret"></i>
+                    </div>
+                    <div class="user-info">
+                        <h4>ผู้เยี่ยมชม</h4>
+                        <span>GUEST</span>
+                    </div>
+                    <a href="/login" style="color: var(--kpru-gold); margin-left: auto; transition: color 0.2s; font-size: 1.15rem;" title="เข้าสู่ระบบเพื่อใช้งานเต็มรูปแบบ">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                    </a>
+                <% } %>
+            </div>
+        </nav>
+
+        <!-- Main Content Wrapper -->
+        <main class="main-content">
+            <!-- Top Navigation Bar -->
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1><%= typeof pageTitle !== 'undefined' ? pageTitle : 'ระบบจองห้องประชุม LPC' %></h1>
+                    <p><%= typeof pageSubTitle !== 'undefined' ? pageSubTitle : 'ศูนย์การเรียนรู้ตลอดชีวิตและพัฒนามาตรฐานวิชาชีพ มรภ.กำแพงเพชร' %></p>
+                </div>
+                <!-- URL Display style to reflect the user's specific LPC URL: https://asl.kpru.ac.th/lpc/ -->
+                <div class="glass-panel" style="padding: 10px 18px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 8px; color: var(--kpru-green);">
+                    <i class="fa-solid fa-link"></i>
+                    <span>asl.kpru.ac.th/lpc</span>
+                </div>
+            </div>

@@ -1,0 +1,257 @@
+<%- include('../partials/header', { title: 'จัดการสมาชิก - LPC Room Booking', activePage: 'users', pageTitle: 'จัดการสมาชิกระบบ', pageSubTitle: 'เพิ่ม ลบ แก้ไข และระงับสิทธิ์การใช้งานของสมาชิกทั้งหมดของศูนย์ LPC' }) %>
+
+<div style="margin-bottom: 24px; display: flex; justify-content: flex-end;">
+    <button onclick="showAddUserModal()" class="btn btn-primary">
+        <i class="fa-solid fa-user-plus"></i> เพิ่มสมาชิกใหม่
+    </button>
+</div>
+
+<div class="glass-panel" style="padding: 24px;">
+    <% if (users && users.length > 0) { %>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                        <th style="padding: 12px 8px;">ชื่อ-นามสกุล</th>
+                        <th style="padding: 12px 8px;">อีเมล</th>
+                        <th style="padding: 12px 8px;">เบอร์โทรศัพท์</th>
+                        <th style="padding: 12px 8px;">สังกัด / หน่วยงาน</th>
+                        <th style="padding: 12px 8px;">สิทธิ์การใช้งาน</th>
+                        <th style="padding: 12px 8px;">สถานะ</th>
+                        <th style="padding: 12px 8px; text-align: right;">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(u => { %>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px 8px; font-weight: 600; color: var(--text-primary);"><%= u.full_name %></td>
+                            <td style="padding: 16px 8px; color: var(--text-primary);"><%= u.email %></td>
+                            <td style="padding: 16px 8px; color: var(--text-primary);"><%= u.phone || '-' %></td>
+                            <td style="padding: 16px 8px; color: var(--text-primary);"><%= u.department_name || '-' %></td>
+                            <td style="padding: 16px 8px;">
+                                <span class="status-badge" style="background: rgba(176, 30, 46, 0.08); color: var(--kpru-red); font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(176, 30, 46, 0.2);">
+                                    <%= u.role_name === 'admin' ? 'ผู้ดูแลระบบ (Admin)' : (u.role_name === 'approver' ? 'ผู้อนุมัติ (Approver)' : 'ผู้จองทั่วไป (User)') %>
+                                </span>
+                            </td>
+                            <td style="padding: 16px 8px;">
+                                <span class="status-badge <%= u.status === 'active' ? 'status-approved' : 'status-cancelled' %>">
+                                    <%= u.status === 'active' ? 'ใช้งานปกติ' : 'ระงับการใช้งาน' %>
+                                </span>
+                            </td>
+                            <td style="padding: 16px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                                <button onclick="showEditUserModal(<%= JSON.stringify(u) %>)" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="fa-solid fa-user-gear"></i> แก้ไข
+                                </button>
+                                <% if (session.userId !== u.id) { %>
+                                    <button onclick="deleteUser(<%= u.id %>)" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                        <i class="fa-solid fa-trash"></i> ลบ
+                                    </button>
+                                <% } else { %>
+                                    <button disabled class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; opacity: 0.5; cursor: not-allowed;" title="ไม่สามารถลบบัญชีที่กำลังเข้าสู่ระบบอยู่ได้">
+                                        <i class="fa-solid fa-trash"></i> ลบ
+                                    </button>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <p style="color: var(--text-secondary); text-align: center; padding: 20px 0;">ยังไม่มีข้อมูลสมาชิกในระบบ</p>
+    <% } %>
+</div>
+
+<!-- Add/Edit User Modal (Glassmorphic Styled Modal) -->
+<div id="userModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div class="glass-panel" style="width: 100%; max-width: 500px; padding: 32px; position: relative;">
+        <h3 id="modalTitle" style="margin-bottom: 24px; font-size: 1.2rem; color: var(--text-primary);">เพิ่มสมาชิกใหม่</h3>
+        <button onclick="closeUserModal()" style="position: absolute; right: 24px; top: 24px; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <form id="userForm">
+            <input type="hidden" id="edit_user_id">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="modal_first_name" class="form-label">ชื่อจริง</label>
+                    <input type="text" id="modal_first_name" class="form-control" placeholder="ชื่อจริง" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="modal_last_name" class="form-label">นามสกุล</label>
+                    <input type="text" id="modal_last_name" class="form-control" placeholder="นามสกุล" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="modal_email" class="form-label">อีเมล</label>
+                <input type="email" id="modal_email" class="form-control" placeholder="เช่น name@email.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="modal_phone" class="form-label">เบอร์โทรศัพท์</label>
+                <input type="tel" id="modal_phone" class="form-control" placeholder="เช่น 081-XXXXXXX">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label for="modal_role_id" class="form-label">สิทธิ์การใช้งาน (Role)</label>
+                    <select id="modal_role_id" class="form-select" required>
+                        <option value="">เลือกบทบาท</option>
+                        <% roles.forEach(role => { %>
+                            <option value="<%= role.id %>"><%= role.role_name === 'admin' ? 'ผู้ดูแลระบบ (Admin)' : (role.role_name === 'approver' ? 'ผู้อนุมัติ (Approver)' : 'ผู้จองทั่วไป (User)') %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modal_department_id" class="form-label">สังกัด / แผนก</label>
+                    <select id="modal_department_id" class="form-select" required>
+                        <option value="">เลือกสังกัด</option>
+                        <% departments.forEach(dept => { %>
+                            <option value="<%= dept.id %>"><%= dept.department_name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" id="statusGroup" style="display: none;">
+                <label for="modal_status" class="form-label">สถานะบัญชีสมาชิก</label>
+                <select id="modal_status" class="form-select">
+                    <option value="active">ใช้งานปกติ (Active)</option>
+                    <option value="inactive">ระงับการใช้งาน (Suspended)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="modal_password" class="form-label" id="passwordLabel">รหัสผ่าน</label>
+                <input type="password" id="modal_password" class="form-control" placeholder="กำหนดรหัสผ่านใหม่ (ขั้นต่ำ 6 ตัวอักษร)" minlength="6">
+                <small style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 4px; display: block;" id="passwordHelp">กรอกเมื่อต้องการเปลี่ยนรหัสผ่านเท่านั้น (เว้นว่างไว้หากไม่เปลี่ยน)</small>
+            </div>
+
+            <div style="margin-top: 28px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="closeUserModal()" class="btn btn-secondary">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('userModal');
+    const form = document.getElementById('userForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const editIdInput = document.getElementById('edit_user_id');
+    const statusGroup = document.getElementById('statusGroup');
+    const passwordLabel = document.getElementById('passwordLabel');
+    const passwordHelp = document.getElementById('passwordHelp');
+    
+    function showAddUserModal() {
+        modalTitle.textContent = 'เพิ่มสมาชิกใหม่';
+        editIdInput.value = '';
+        statusGroup.style.display = 'none';
+        passwordLabel.textContent = 'รหัสผ่าน';
+        passwordHelp.style.display = 'none';
+        document.getElementById('modal_password').required = true;
+        form.reset();
+        modal.style.display = 'flex';
+    }
+
+    function showEditUserModal(user) {
+        modalTitle.textContent = 'แก้ไขข้อมูลสมาชิก';
+        editIdInput.value = user.id;
+        
+        document.getElementById('modal_first_name').value = user.first_name || '';
+        document.getElementById('modal_last_name').value = user.last_name || '';
+        document.getElementById('modal_email').value = user.email;
+        document.getElementById('modal_phone').value = user.phone || '';
+        
+        // Find role option by name matches
+        const roleSelect = document.getElementById('modal_role_id');
+        for (let i = 0; i < roleSelect.options.length; i++) {
+            const opt = roleSelect.options[i];
+            if (opt.text.toLowerCase().includes(user.role_name.toLowerCase())) {
+                roleSelect.value = opt.value;
+                break;
+            }
+        }
+        
+        // Find department option
+        const deptSelect = document.getElementById('modal_department_id');
+        for (let i = 0; i < deptSelect.options.length; i++) {
+            const opt = deptSelect.options[i];
+            if (opt.text === user.department_name) {
+                deptSelect.value = opt.value;
+                break;
+            }
+        }
+
+        document.getElementById('modal_status').value = user.status;
+        statusGroup.style.display = 'block';
+        
+        passwordLabel.textContent = 'เปลี่ยนรหัสผ่าน (ถ้าต้องการ)';
+        passwordHelp.style.display = 'block';
+        document.getElementById('modal_password').required = false;
+        document.getElementById('modal_password').value = '';
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeUserModal() {
+        modal.style.display = 'none';
+    }
+
+    async function deleteUser(id) {
+        if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสมาชิกรายนี้? ข้อมูลการจองทั้งหมดของสมาชิกจะถูกลบไปด้วย')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+            const result = await res.json();
+            alert(result.message);
+            window.location.reload();
+        } catch (e) {
+            console.error(e);
+            alert('เกิดข้อผิดพลาดในการลบสมาชิก');
+        }
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const id = editIdInput.value;
+        const url = id ? `/api/users/${id}` : '/api/users';
+        const method = id ? 'PUT' : 'POST';
+
+        const data = {
+            first_name: document.getElementById('modal_first_name').value,
+            last_name: document.getElementById('modal_last_name').value,
+            email: document.getElementById('modal_email').value,
+            phone: document.getElementById('modal_phone').value,
+            role_id: parseInt(document.getElementById('modal_role_id').value),
+            department_id: parseInt(document.getElementById('modal_department_id').value),
+            status: document.getElementById('modal_status').value,
+            password: document.getElementById('modal_password').value
+        };
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            alert(result.message);
+            if (res.status === 200 || res.status === 201) {
+                closeUserModal();
+                window.location.reload();
+            }
+        } catch (err) {
+            console.error(err);
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        }
+    });
+</script>
+
+<%- include('../partials/footer') %>

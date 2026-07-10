@@ -1,0 +1,155 @@
+<%- include('../partials/header', { title: 'ระบบจองห้อง ศูนย์ LPC - LPC Room Booking', activePage: 'dashboard', pageTitle: 'ระบบจองห้อง ศูนย์ LPC', pageSubTitle: 'ศูนย์การเรียนรู้ตลอดชีวิตและพัฒนามาตรฐานวิชาชีพ (LPC)' }) %>
+
+<% if (!user) { %>
+    <div class="glass-panel" style="padding: 24px; margin-bottom: 24px; background: linear-gradient(135deg, rgba(176, 30, 46, 0.08) 0%, rgba(245, 158, 11, 0.03) 100%); border: 1px solid rgba(176, 30, 46, 0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-radius: 14px;">
+        <div style="flex: 1; min-width: 280px;">
+            <h3 style="color: var(--kpru-red); margin-bottom: 6px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-circle-info"></i> ยินดีต้อนรับเข้าสู่ระบบจองห้องประชุม LPC</h3>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">คุณสามารถตรวจสอบความว่างและตารางการเข้าใช้ห้องประชุมผ่านทางสถิติและปฏิทินของทางศูนย์ได้ทันที หากต้องการทำการจองห้องประชุม โปรดลงชื่อเข้าใช้งานระบบเพื่อดำเนินการต่อ</p>
+        </div>
+        <a href="/login" class="btn btn-primary" style="padding: 12px 24px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px;">
+            <i class="fa-solid fa-right-to-bracket"></i> ลงชื่อเข้าใช้งานระบบ
+        </a>
+    </div>
+<% } %>
+
+<!-- Dashboard KPIs Grid -->
+<div class="kpis-grid">
+    <!-- Card 1: Total Rooms -->
+    <div class="glass-panel kpi-card">
+        <div class="kpi-details">
+            <span>ห้องทั้งหมด</span>
+            <h2><%= kpis.totalRooms %> ห้อง</h2>
+            <p style="color: var(--success);"><i class="fa-solid fa-circle-check"></i> พร้อมใช้งานปกติ</p>
+        </div>
+        <div class="kpi-icon rooms">
+            <i class="fa-solid fa-door-closed"></i>
+        </div>
+    </div>
+
+    <!-- Card 2: Today's Bookings -->
+    <div class="glass-panel kpi-card">
+        <div class="kpi-details">
+            <span>การจองวันนี้</span>
+            <h2><%= kpis.todayBookings %> รายการ</h2>
+            <% 
+               let diffPct = 0;
+               if (kpis.yesterdayBookings > 0) {
+                   diffPct = Math.round(((kpis.todayBookings - kpis.yesterdayBookings) / kpis.yesterdayBookings) * 100);
+               } else if (kpis.todayBookings > 0) {
+                   diffPct = 100;
+               }
+            %>
+            <p style="color: <%= diffPct >= 0 ? 'var(--success)' : 'var(--danger)' %>;">
+                <i class="fa-solid <%= diffPct >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %>"></i> 
+                <%= diffPct >= 0 ? '+' : '' %><%= diffPct %>% จากเมื่อวาน
+            </p>
+        </div>
+        <div class="kpi-icon today">
+            <i class="fa-solid fa-calendar-check"></i>
+        </div>
+    </div>
+
+    <!-- Card 3: Pending Approvals -->
+    <% if (user && (user.role_name === 'admin' || user.role_name === 'approver')) { %>
+    <div class="glass-panel kpi-card">
+        <div class="kpi-details">
+            <span>รออนุมัติ</span>
+            <h2><%= kpis.pendingApprovals %> รายการ</h2>
+            <p style="color: var(--warning);"><i class="fa-solid fa-circle-exclamation"></i> ต้องดำเนินการพิจารณา</p>
+        </div>
+        <div class="kpi-icon pending">
+            <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- Card 4: Utilization Rate -->
+    <div class="glass-panel kpi-card">
+        <div class="kpi-details">
+            <span>อัตราการใช้งานห้อง</span>
+            <h2><%= kpis.utilizationRate %>%</h2>
+            <p style="color: var(--info);"><i class="fa-solid fa-clock"></i> เฉลี่ย 7 วันล่าสุด</p>
+        </div>
+        <div class="kpi-icon utilization">
+            <i class="fa-solid fa-chart-line"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Charts Grid (Styled exactly matching the blueprint) -->
+<div class="charts-grid">
+    <!-- Chart 1: Bar Chart (จำนวนการจองแยกตามห้อง) -->
+    <div class="glass-panel chart-card">
+        <div class="chart-card-header">
+            <h3><i class="fa-solid fa-chart-bar" style="color: var(--kpru-green); margin-right: 8px;"></i>จำนวนการจองแยกตามห้อง</h3>
+            <span style="font-size: 0.75rem; color: var(--text-secondary);">จำนวนการจอง (ครั้ง)</span>
+        </div>
+        <div class="chart-container">
+            <canvas id="bookingsByRoomChart"></canvas>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 12px;">
+            คลิกที่แท่งกราฟเพื่อดูรายละเอียดการจองของห้องนั้น
+        </p>
+    </div>
+
+    <!-- Chart 2: Donut Chart (สถานะการจอง) -->
+    <div class="glass-panel chart-card">
+        <div class="chart-card-header">
+            <h3><i class="fa-solid fa-circle-half-stroke" style="color: var(--kpru-green); margin-right: 8px;"></i>สถานะการจอง</h3>
+        </div>
+        <div class="chart-container" style="display: flex; align-items: center; justify-content: center;">
+            <div style="width: 180px; height: 180px; position: relative;">
+                <canvas id="bookingStatusChart"></canvas>
+            </div>
+        </div>
+        <div id="donutLegend" style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.75rem; color: var(--text-secondary);">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <!-- Chart 3: Line Chart (แนวโน้มการจองรายสัปดาห์) -->
+    <div class="glass-panel chart-card">
+        <div class="chart-card-header">
+            <h3><i class="fa-solid fa-arrow-trend-up" style="color: var(--kpru-green); margin-right: 8px;"></i>แนวโน้มการจองรายสัปดาห์</h3>
+            <span style="font-size: 0.75rem; color: var(--text-secondary);">จำนวนการจอง (ครั้ง)</span>
+        </div>
+        <div class="chart-container">
+            <canvas id="weeklyTrendChart"></canvas>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 12px;">
+            คลิกจุดกราฟเพื่อดูรายละเอียดการจองในวันนั้น
+        </p>
+    </div>
+</div>
+
+<!-- Bottom Section: Calendar View instead of Recent Bookings / Notifications -->
+<div class="glass-panel" style="padding: 24px; margin-top: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: var(--text-primary); margin: 0;">
+            <i class="fa-solid fa-calendar-days" style="color: var(--kpru-gold);"></i> ปฏิทินสถานะการจองห้องประชุมศูนย์ LPC
+        </h3>
+        <!-- Color Legend Indicators -->
+        <div style="display: flex; gap: 16px; font-size: 0.8rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #10B981;"></span>
+                <span style="color: var(--text-secondary);">อนุมัติแล้ว</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #F59E0B;"></span>
+                <span style="color: var(--text-secondary);">รออนุมัติ</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #EF4444;"></span>
+                <span style="color: var(--text-secondary);">ปฏิเสธ</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #9CA3AF;"></span>
+                <span style="color: var(--text-secondary);">ยกเลิก</span>
+            </div>
+        </div>
+    </div>
+    <!-- Calendar Container -->
+    <div id="calendar" style="min-height: 600px;"></div>
+</div>
+
+<%- include('../partials/footer') %>

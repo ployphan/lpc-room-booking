@@ -1,0 +1,255 @@
+<%- include('../partials/header', { title: 'แก้ไขการจองห้องประชุม - LPC Room Booking', activePage: 'all_bookings', pageTitle: 'แก้ไขรายละเอียดการจอง', pageSubTitle: 'ปรับเปลี่ยนข้อมูลรายละเอียดวัน เวลา ผู้ประสานงาน และวาระการประชุม' }) %>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Edit Booking Form Card -->
+    <div class="glass-panel" style="padding: 32px;">
+        <div id="formError" class="auth-error" style="display: none;"></div>
+
+        <form id="editBookingForm">
+            <!-- Room Selection & Live Check -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="room_id" class="form-label">ห้องประชุม</label>
+                    <select id="room_id" name="room_id" class="form-select" required>
+                        <option value="">เลือกห้องประชุมที่ต้องการ</option>
+                        <% rooms.forEach(room => { %>
+                            <option value="<%= room.id %>" <%= booking.room_id === room.id ? 'selected' : '' %>><%= room.room_name %> (จุได้ <%= room.capacity %> คน)</option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="date" class="form-label">วันที่ใช้งาน</label>
+                    <input type="date" id="date" name="date" class="form-control" value="<%= booking.meeting_date %>" required>
+                </div>
+            </div>
+
+            <!-- Time Selection (24 Hour Format) -->
+            <% 
+               const bStart = booking.start_time.substring(0, 5);
+               const bEnd = booking.end_time.substring(0, 5);
+               
+               const timeOptions = [
+                   "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", 
+                   "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", 
+                   "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", 
+                   "17:00", "17:30", "18:00", "18:30"
+               ];
+            %>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="start_time" class="form-label">เวลาเริ่มต้น (24 ชม.)</label>
+                    <select id="start_time" name="start_time" class="form-select" required>
+                        <option value="">เลือกเวลาเริ่ม</option>
+                        <% timeOptions.forEach(opt => { %>
+                            <option value="<%= opt %>" <%= bStart === opt ? 'selected' : '' %>><%= opt %></option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="end_time" class="form-label">เวลาสิ้นสุด (24 ชม.)</label>
+                    <select id="end_time" name="end_time" class="form-select" required>
+                        <option value="">เลือกเวลาสิ้นสุด</option>
+                        <% timeOptions.forEach(opt => { %>
+                            <option value="<%= opt %>" <%= bEnd === opt ? 'selected' : '' %>><%= opt %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Live Status Alert Badge -->
+            <div id="availabilityBadge" class="glass-panel" style="display: none; padding: 12px 16px; margin-bottom: 24px; font-size: 0.9rem; font-weight: 500;">
+                <!-- Updated dynamically via JS -->
+            </div>
+
+            <!-- Booker details -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 20px;">
+                <div class="form-group">
+                    <label for="booker_name" class="form-label">ชื่อ-สกุล ผู้จอง</label>
+                    <input type="text" id="booker_name" name="booker_name" class="form-control" value="<%= booking.booker_name || booking.user_name %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="booker_department" class="form-label">หน่วยงานผู้จอง</label>
+                    <input type="text" id="booker_department" name="booker_department" class="form-control" value="<%= booking.booker_department || booking.department_name %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="booker_phone" class="form-label">เบอร์โทรผู้จอง</label>
+                    <input type="text" id="booker_phone" name="booker_phone" class="form-control" value="<%= booking.booker_phone || booking.phone %>" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="title" class="form-label">หัวข้อการประชุม</label>
+                <input type="text" id="title" name="title" class="form-control" value="<%= booking.title %>" required>
+            </div>
+
+            <div class="form-group">
+                <label for="attendees" class="form-label">จำนวนผู้เข้าประชุม (คน)</label>
+                <input type="number" id="attendees" name="attendees" class="form-control" value="<%= booking.attendee_count %>" min="1" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 28px;">
+                <label for="details" class="form-label">รายละเอียด / วาระการประชุม</label>
+                <textarea id="details" name="details" class="form-control" rows="4"><%= booking.agenda %></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <a href="/bookings/<%= booking.id %>" class="btn btn-secondary">ยกเลิก</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> บันทึกการแก้ไข
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info side panel -->
+    <div class="glass-panel" style="padding: 24px; height: fit-content;">
+        <h3 style="margin-bottom: 16px; font-size: 1.1rem; color: var(--kpru-gold);">
+            <i class="fa-solid fa-scale-balanced"></i> สถานะประวัติคำขอ
+        </h3>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 14px;">
+            <div class="form-group">
+                <label for="approval_status" class="form-label" style="font-weight: 500; font-size: 0.85rem; display: block; margin-bottom: 6px; color: var(--text-primary);">สถานะการอนุมัติ</label>
+                <select id="approval_status" name="approval_status" class="form-select" style="font-size: 0.85rem; padding: 6px 12px; background: rgba(0,0,0,0.2);">
+                    <option value="pending" <%= booking.approval_status === 'pending' ? 'selected' : '' %>>รออนุมัติ (Pending)</option>
+                    <option value="approved" <%= booking.approval_status === 'approved' ? 'selected' : '' %>>อนุมัติแล้ว (Approved)</option>
+                    <option value="rejected" <%= booking.approval_status === 'rejected' ? 'selected' : '' %>>ไม่อนุมัติ/ปฏิเสธ (Rejected)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="booking_status" class="form-label" style="font-weight: 500; font-size: 0.85rem; display: block; margin-bottom: 6px; color: var(--text-primary);">สถานะการจอง</label>
+                <select id="booking_status" name="booking_status" class="form-select" style="font-size: 0.85rem; padding: 6px 12px; background: rgba(0,0,0,0.2);">
+                    <option value="confirmed" <%= booking.booking_status === 'confirmed' ? 'selected' : '' %>>ปกติ (Confirmed)</option>
+                    <option value="cancelled" <%= booking.booking_status === 'cancelled' ? 'selected' : '' %>>ยกเลิกแล้ว (Cancelled)</option>
+                </select>
+            </div>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 6px;">
+                <strong>บัญชีผู้จองต้นทาง:</strong> <%= booking.user_name %> (<%= booking.user_email %>)
+            </div>
+            <div>
+                <strong>วันที่บันทึกระบบ:</strong> <%= booking.created_at %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('editBookingForm');
+        const roomSelect = document.getElementById('room_id');
+        const dateInput = document.getElementById('date');
+        const startTimeInput = document.getElementById('start_time');
+        const endTimeInput = document.getElementById('end_time');
+        const availabilityBadge = document.getElementById('availabilityBadge');
+        const bookingId = '<%= booking.id %>';
+
+        // Check availability on change
+        async function checkAvailability() {
+            const roomId = roomSelect.value;
+            const date = dateInput.value;
+            const start = startTimeInput.value;
+            const end = endTimeInput.value;
+
+            if (!roomId || !date || !start || !end) {
+                availabilityBadge.style.display = 'none';
+                return;
+            }
+
+            if (start >= end) {
+                availabilityBadge.style.display = 'block';
+                availabilityBadge.className = 'auth-error';
+                availabilityBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+                availabilityBadge.style.color = '#EF4444';
+                availabilityBadge.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                availabilityBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> เวลาเริ่มต้นต้องเกิดขึ้นก่อนเวลาสิ้นสุด';
+                return;
+            }
+
+            try {
+                // Exclude current booking ID so it doesn't collide with itself
+                const res = await fetch(`/api/rooms/available?date=${date}&start=${start}&end=${end}`);
+                const result = await res.json();
+                if (result.status === 200) {
+                    const availableRooms = result.data;
+                    
+                    // The room is available if it's in the list of available rooms, 
+                    // OR if the current booking itself is the one reserving it (which we check on server, but in API check it might be returned)
+                    // Let's call another API check or handle it in client. If it's the same room, date, and overlapping with its own old time, server handles excludeBookingId.
+                    // For client, we just fetch available. We can do simple check.
+                    // Actually, the server availableRooms check does not know bookingId. So let's show status check or just verify on submit.
+                    // To show active message:
+                    availabilityBadge.style.display = 'block';
+                    availabilityBadge.style.background = 'rgba(255,255,255,0.02)';
+                    availabilityBadge.style.color = 'var(--text-secondary)';
+                    availabilityBadge.style.border = '1px solid var(--border-color)';
+                    availabilityBadge.innerHTML = '<i class="fa-solid fa-circle-question"></i> ระบบจะตรวจสอบความซ้อนทับเมื่อคุณบันทึกการแก้ไข';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        roomSelect.addEventListener('change', checkAvailability);
+        dateInput.addEventListener('change', checkAvailability);
+        startTimeInput.addEventListener('change', checkAvailability);
+        endTimeInput.addEventListener('change', checkAvailability);
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorContainer = document.getElementById('formError');
+            errorContainer.style.display = 'none';
+
+            const start = startTimeInput.value;
+            const end = endTimeInput.value;
+
+            if (start >= end) {
+                errorContainer.style.display = 'block';
+                errorContainer.className = 'auth-error';
+                errorContainer.textContent = 'เวลาเริ่มต้นต้องเกิดขึ้นก่อนเวลาสิ้นสุด';
+                return;
+            }
+
+            const formData = {
+                room_id: parseInt(roomSelect.value),
+                title: document.getElementById('title').value,
+                booker_name: document.getElementById('booker_name').value,
+                booker_department: document.getElementById('booker_department').value,
+                booker_phone: document.getElementById('booker_phone').value,
+                meeting_date: dateInput.value,
+                start_time: start,
+                end_time: end,
+                attendee_count: parseInt(document.getElementById('attendees').value) || 0,
+                agenda: document.getElementById('details').value || '',
+                approval_status: document.getElementById('approval_status').value,
+                booking_status: document.getElementById('booking_status').value
+            };
+
+            try {
+                const res = await fetch(`/api/bookings/${bookingId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const result = await res.json();
+                
+                if (res.status === 200) {
+                    alert(result.message);
+                    window.location.href = `/bookings/${bookingId}`;
+                } else {
+                    errorContainer.style.display = 'block';
+                    errorContainer.className = 'auth-error';
+                    errorContainer.textContent = result.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+                }
+            } catch (err) {
+                console.error(err);
+                errorContainer.style.display = 'block';
+                errorContainer.className = 'auth-error';
+                errorContainer.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+            }
+        });
+    });
+</script>
+
+<%- include('../partials/footer') %>

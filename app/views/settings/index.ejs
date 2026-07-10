@@ -1,0 +1,44 @@
+<%- include('../partials/header', { title: 'ตั้งค่าระบบ - LPC Room Booking', activePage: 'settings', pageTitle: 'ตั้งค่าระบบ (Settings)', pageSubTitle: 'ปรับแต่งการตั้งค่าการจองห้องและนโยบายของระบบศูนย์ LPC' }) %>
+
+<div class="glass-panel" style="padding: 32px; max-width: 700px;">
+    <h3 style="margin-bottom: 24px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-sliders" style="color: var(--kpru-gold);"></i> การกำหนดค่านโยบายการจองห้องประชุม
+    </h3>
+
+    <form onsubmit="event.preventDefault(); alert('บันทึกการตั้งค่าระบบ LPC สำเร็จ');">
+        <div class="form-group">
+            <label class="form-label">ชื่อของระบบ (System Name)</label>
+            <input type="text" class="form-control" value="ศูนย์การเรียนรู้ตลอดชีวิต (LPC) - ระบบจองห้องประชุม" readonly>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label class="form-label">ระยะเวลาจองล่วงหน้าสูงสุด (วัน)</label>
+                <input type="number" class="form-control" value="30">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ระยะเวลาจองล่วงหน้าขั้นต่ำ (ชั่วโมง)</label>
+                <input type="number" class="form-control" value="24">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">นโยบายการอนุมัติคำขอ (Approval Mode)</label>
+            <select class="form-select">
+                <option value="1">ผู้อนุมัติตรวจสอบทุกคำขอ (Default)</option>
+                <option value="0">อนุมัติอัตโนมัติ (Auto-Approve)</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+            <label class="form-label">LINE Token สำหรับแจ้งเตือนผู้ดูแลระบบ (LINE Notify API)</label>
+            <input type="password" class="form-control" value="••••••••••••••••••••••••••••••••••••••••" placeholder="ระบุ LINE Notify Token">
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า
+        </button>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

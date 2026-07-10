@@ -1,0 +1,147 @@
+<%- include('../partials/header', { title: 'รายละเอียดการจอง - LPC Room Booking', activePage: 'my_bookings', pageTitle: 'รายละเอียดการจองห้อง', pageSubTitle: 'ดูประวัติ ข้อมูลผู้เข้าร่วม และผลการอนุมัติการจองห้องประชุม' }) %>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Main Booking Details Card -->
+    <div class="glass-panel" style="padding: 32px; display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
+            <div>
+                <h2 style="font-size: 1.4rem; color: var(--text-primary);"><%= booking.title %></h2>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px;">
+                    <i class="fa-solid fa-folder-open" style="margin-right: 6px;"></i> สังกัด: <%= booking.department_name || 'ไม่ระบุ' %>
+                </p>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                <div style="display: flex; gap: 8px;">
+                    <span class="status-badge status-<%= booking.approval_status %>" style="font-size: 0.85rem; padding: 8px 16px;">
+                        <%= booking.approval_status === 'approved' ? 'อนุมัติแล้ว' : (booking.approval_status === 'pending' ? 'รออนุมัติ' : 'ปฏิเสธ') %>
+                    </span>
+                    <span class="status-badge <%= booking.booking_status === 'cancelled' ? 'status-cancelled' : 'status-approved' %>" style="font-size: 0.85rem; padding: 8px 16px;">
+                        <%= booking.booking_status === 'cancelled' ? 'ยกเลิกแล้ว' : 'สถานะจองปกติ' %>
+                    </span>
+                </div>
+                <% if (user && (user.role_name === 'admin' || user.role_name === 'approver')) { %>
+                    <a href="/bookings/<%= booking.id %>/edit" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; margin-top: 4px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-color);">
+                        <i class="fa-solid fa-pen-to-square"></i> แก้ไขรายละเอียด
+                    </a>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Room and Time Info Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <div>
+                <h4 style="color: var(--kpru-gold); margin-bottom: 12px; font-size: 1rem; font-weight: 600;"><i class="fa-solid fa-door-open"></i> ข้อมูลห้องประชุม</h4>
+                <p style="font-weight: 700; color: var(--text-primary); font-size: 1.15rem;"><%= booking.room_name %></p>
+                <p style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 6px;"><%= booking.location %> | <%= booking.floor %></p>
+                <p style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 4px;">ความจุห้อง: <%= booking.capacity %> ที่นั่ง</p>
+            </div>
+            <div>
+                <h4 style="color: var(--kpru-gold); margin-bottom: 12px; font-size: 1rem; font-weight: 600;"><i class="fa-solid fa-clock"></i> ข้อมูลวันและเวลา</h4>
+                <p style="font-weight: 700; color: var(--text-primary); font-size: 1.15rem;"><%= booking.meeting_date %></p>
+                <p style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 6px;">เวลา: <%= booking.start_time %> - <%= booking.end_time %> น.</p>
+                <p style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 4px;">ผู้เข้าประชุมจริง: <%= booking.attendee_count %> คน</p>
+            </div>
+        </div>
+
+        <!-- Agenda -->
+        <div>
+            <h4 style="color: var(--kpru-gold); margin-bottom: 10px; font-size: 1.05rem; font-weight: 600;"><i class="fa-solid fa-file-text"></i> วาระการประชุม / รายละเอียด</h4>
+            <div style="background: #F3F4F6; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); color: #1F2937; font-size: 1.05rem; min-height: 100px; white-space: pre-line; line-height: 1.5; font-weight: 500;">
+                <%= booking.agenda || 'ไม่มีวาระการประชุมระบุเพิ่มเติม' %>
+            </div>
+        </div>
+
+        <!-- User who booked info -->
+        <div style="border-top: 1px solid var(--border-color); padding-top: 24px; display: flex; align-items: center; gap: 16px;">
+            <div class="user-avatar" style="width: 52px; height: 52px; font-size: 1.4rem; font-weight: bold;">
+                <%= (booking.booker_name || booking.user_name).charAt(0) %>
+            </div>
+            <div>
+                <span style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">ข้อมูลผู้จอง</span>
+                <h4 style="font-size: 1.15rem; color: var(--text-primary); margin-top: 4px; font-weight: 700;"><%= booking.booker_name || booking.user_name %></h4>
+                <p style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 2px;">
+                    หน่วยงาน: <%= booking.booker_department || booking.department_name || '-' %> | 
+                    โทร: <%= booking.booker_phone || booking.phone || '-' %>
+                </p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+                    บัญชีผู้ทำรายการ: <%= booking.user_name %> (<%= booking.user_email %>)
+                </p>
+            </div>
+        </div>
+
+        <!-- Approver / Admin Actions (Always visible to Approver and Admin roles to allow editing, resetting, and deciding) -->
+        <% if (user && (user.role_name === 'approver' || user.role_name === 'admin')) { %>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 24px; margin-top: 24px;">
+                <h4 style="color: var(--kpru-gold); margin-bottom: 12px; font-size: 0.95rem;">
+                    <i class="fa-solid fa-scale-balanced"></i> จัดการผลการอนุมัติ (สิทธิ์ผู้อนุมัติ & แอดมิน)
+                </h4>
+
+                <% if (approvalDetail) { %>
+                    <div class="glass-panel" style="padding: 16px; margin-bottom: 20px; border-left: 4px solid var(--kpru-green); font-size: 0.85rem; background: rgba(255, 255, 255, 0.01);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong>การพิจารณาล่าสุด:</strong>
+                            <span class="status-badge status-<%= booking.approval_status %>">
+                                <%= booking.approval_status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธคำขอ' %>
+                            </span>
+                        </div>
+                        <div><strong>ผู้พิจารณา:</strong> <%= approvalDetail.approver_name %> (<%= approvalDetail.approver_email %>)</div>
+                        <div style="margin-top: 4px;"><strong>เหตุผล/หมายเหตุ:</strong> <%= approvalDetail.action_note || 'ไม่มี' %></div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px;">วันที่ดำเนินการ: <%= approvalDetail.action_at %></div>
+                    </div>
+                <% } %>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+                    <% if (booking.approval_status !== 'pending') { %>
+                        <button onclick="resetApproval(<%= booking.id %>)" class="btn btn-secondary" style="padding: 12px 24px; border: 1px solid var(--border-color); color: #EF4444; background: rgba(239, 68, 68, 0.05); font-size: 0.9rem;">
+                            <i class="fa-solid fa-rotate-left"></i> ลบผลการอนุมัติ (รีเซ็ตกลับเป็นรอพิจารณา)
+                        </button>
+                    <% } %>
+                    
+                    <button onclick="processApproval(<%= booking.id %>, 'reject')" class="btn btn-danger" style="padding: 12px 28px; font-size: 0.9rem;">
+                        <i class="fa-solid fa-xmark"></i> ปฏิเสธคำขอจอง
+                    </button>
+                    <button onclick="processApproval(<%= booking.id %>, 'approve')" class="btn btn-success" style="padding: 12px 28px; font-size: 0.9rem;">
+                        <i class="fa-solid fa-check"></i> อนุมัติการจอง
+                    </button>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Cancel Action (Only visible to booking owner if active) -->
+        <% if (user && (user.id === booking.user_id || user.role_name === 'admin') && booking.booking_status !== 'cancelled' && booking.approval_status !== 'rejected') { %>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 24px; display: flex; justify-content: flex-end;">
+                <button onclick="cancelBooking(<%= booking.id %>)" class="btn btn-danger" style="padding: 12px 24px;">
+                    <i class="fa-solid fa-ban"></i> ยกเลิกรายการจองนี้
+                </button>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Right Column: Attendees list -->
+    <div class="glass-panel" style="padding: 24px; height: fit-content;">
+        <h3 style="margin-bottom: 20px; font-size: 1.1rem; color: var(--kpru-gold);">
+            <i class="fa-solid fa-users"></i> ผู้เข้าร่วมประชุม (<%= attendees ? attendees.length : 0 %> คน)
+        </h3>
+
+        <% if (attendees && attendees.length > 0) { %>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <% attendees.forEach(att => { %>
+                    <div style="display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.8rem; background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid var(--border-color);">
+                            <%= att.attendee_name.charAt(0) %>
+                        </div>
+                        <div style="overflow: hidden;">
+                            <h4 style="font-size: 0.85rem; color: #FFFFFF; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"><%= att.attendee_name %></h4>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"><%= att.attendee_email %></p>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <p style="color: var(--text-secondary); text-align: center; font-size: 0.85rem; padding: 20px 0;">ไม่มีผู้เข้าร่วมระบุไว้เพิ่มเติม</p>
+        <% } %>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
