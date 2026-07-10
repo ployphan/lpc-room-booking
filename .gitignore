@@ -2,3 +2,5 @@ node_modules
 database/database.db
 .env
 .gemini
+cloudflared.exe
+*.exe
